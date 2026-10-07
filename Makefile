@@ -9,10 +9,3 @@ Eri_FILES = menu.mm
 Eri_FRAMEWORKS = UIKit Foundation
 
 include $(THEOS_MAKE_PATH)/tweak.mk
-
-after-package::
-	@echo "Fixing Substrate dependency path..."
-	@install_name_tool -change \
-		/Library/Frameworks/Cydiasubstrate.framework/Cydiasubstrate \
-		@executable_path/libsubstrate.dylib \
-		.theos/obj/Eri.dylib || true
