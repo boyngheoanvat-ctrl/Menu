@@ -6,7 +6,7 @@ include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = PubgCheatMenu
 
-PubgCheatMenu_FILES = PubgLoad.m ImGuiDrawView.mm menu.mm JHDragView.m JHPP.m
+PubgCheatMenu_FILES = menu.mm
 PubgCheatMenu_CFLAGS = -fobjc-arc -Wno-unused-variable -Wno-unused-value
 PubgCheatMenu_LIBRARIES = substrate
 
