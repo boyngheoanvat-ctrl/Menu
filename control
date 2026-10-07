@@ -1,9 +1,0 @@
-Package: com.eri.eri
-Name: Eri
-Depends: mobilesubstrate
-Version: 1.0.0
-Architecture: iphoneos-arm
-Description: Eri iOS tweak
-Maintainer: eri
-Author: eri
-Section: Tweaks
