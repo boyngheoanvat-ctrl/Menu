@@ -1,32 +1,30 @@
-name: Build iOS Dylib
+name: cj
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
 
 jobs:
   build:
     runs-on: macos-latest
+
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Setup Dependencies & Theos
-        run: |
-          brew install ldid
-          rm -rf ~/theos
-          git clone --recursive https://github.com/theos/theos.git ~/theos
-          rm -rf ~/theos/sdks
-          git clone --depth 1 https://github.com/theos/sdks.git ~/theos/sdks
+    - name: Setup Theos
+      uses: unforgiven-dev/install-theos-action@v1
 
-      - name: Build Dylib
-        env:
-          THEOS: /Users/runner/theos
-        run: |
-          make clean
-          make
+    - name: Build Tweak
+      run: make package
 
-      # Bước mới: Đưa file dylib lên mục Artifacts để tải về
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: eri-dylib
-          path: .theos/obj/debug/eri.dylib # Hoặc kiểm tra đường dẫn file dylib nếu nó xuất ra ở thư mục gốc
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: PubgCheatMenu-Dylib
+        path: |
+          .theos/obj/*.dylib
+          .theos/obj/debug/*.dylib
+          packages/*.deb
