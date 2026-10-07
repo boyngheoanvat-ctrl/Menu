@@ -1,16 +1,16 @@
-THEOS_DEVICE_IP = 
-ARCHS = arm64
-TARGET = iphone:clang:latest:12.0
+TARGET := iphone:clang:latest:10.0
+ARCHS := arm64
 
 include $(THEOS)/makefiles/common.mk
 
-TWEAK_NAME = PubgCheatMenu
+TWEAK_NAME = Eri
 
-PubgCheatMenu_FILES = menu.mm
-PubgCheatMenu_CFLAGS = -fobjc-arc -Wno-unused-variable -Wno-unused-value
-PubgCheatMenu_LIBRARIES = substrate
+Eri_FILES = menu.mm
+Eri_FRAMEWORKS = UIKit Foundation
 
 include $(THEOS_MAKE_PATH)/tweak.mk
 
-after-install::
-	install.exec "killall -9 UnityFramework || true"
+# Tự động chuyển đổi đường dẫn Substrate sang @executable_path khi đóng gói deb
+after-package::
+	@echo "Fixing Substrate dependency path..."
+	@install_name_tool -change /Library/Frameworks/Cydiasubstrate.framework/Cydiasubstrate @executable_path/libsubstrate.dylib .theos/obj/Eri.dylib || true
