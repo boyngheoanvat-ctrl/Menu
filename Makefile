@@ -5,8 +5,10 @@ include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = Eri
 
-Eri_FILES = menu.mm
+# Thêm menu.mm và các file xử lý ImGui (nếu có thêm imgui.cpp thì điền vào đây)
+Eri_FILES = menu.mm 
 Eri_FRAMEWORKS = UIKit Foundation OpenGLES Metal QuartzCore
+Eri_CFLAGS = -fobjc-arc -std=c++11
 
 include $(THEOS_MAKE_PATH)/tweak.mk
 
