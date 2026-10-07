@@ -1,0 +1,19 @@
+name: PubgCheat
+bundle_id: com.pubg.cheat.menu
+target:
+  type: dynamic_library
+  name: PubgCheat
+sources:
+  - PubgLoad.m
+  - ImGuiDrawView.mm
+  - menu.mm
+  - JHDragView.m
+  - JHPP.m
+frameworks:
+  - UIKit
+  - Foundation
+  - CoreGraphics
+libraries:
+  - substrate
+architectures:
+  - arm64
