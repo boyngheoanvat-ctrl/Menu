@@ -3,5 +3,5 @@
         Bundles = {
             "com.garena.game.kgvn"
         };
-    };
+    }; 
 }
