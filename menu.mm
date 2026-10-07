@@ -1,9 +1,8 @@
 #import <UIKit/UIKit.h>
 #import <mach-o/dyld.h>
 #import <sys/mman.h>
-#import "ImGuiDrawView.h"
 
-// Hàm ghi bộ nhớ và đồng bộ instruction cache cho ARM64
+// Hàm ghi bộ nhớ cho ARM64
 void WriteMem(uint64_t address, const void *bytes, size_t size) {
     mach_port_t task = mach_task_self();
     vm_address_t targetPage = (vm_address_t)address & ~(vm_page_size - 1);
@@ -15,11 +14,10 @@ void WriteMem(uint64_t address, const void *bytes, size_t size) {
     sys_icache_invalidate((void *)address, size);
 }
 
-// Lưu trữ các slide địa chỉ khi app khởi động
 static uint64_t unitySlide = 0;
 static uint64_t anortSlide = 0;
 
-// Hàm tự động chạy khi tweak vừa load (Luôn bật: Fix crack & Antiban)
+// Tính năng Luôn bật (Fix crack & Antiban) chạy ngầm khi khởi động
 __attribute__((constructor)) void initPatches() {
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         uint32_t count = _dyld_image_count();
@@ -61,59 +59,86 @@ __attribute__((constructor)) void initPatches() {
     ImGui::TextColored(ImVec4(0, 1, 0, 1), "Status: Fix Crack & Antiban Active");
     ImGui::Separator();
     
-    // Khai báo trạng thái các chức năng Bật/Tắt
     static bool b_map = false;
     static bool b_camxa = false;
     static bool b_showunti = false;
     static bool b_showlsd = false;
     static bool b_antray = false;
     
-    // 1. Map (Có bật/tắt)
+    // 1. Map (Bật / Tắt)
     if (ImGui::Checkbox("Map Hack", &b_map)) {
         if (unitySlide > 0) {
             if (b_map) {
                 Byte patch[] = {0x36, 0x00, 0x80, 0xD2};
                 WriteMem(unitySlide + 0x4A38100, patch, sizeof(patch));
             } else {
-                // Byte gốc của Map (bạn cần thay thế lại byte gốc nếu tắt, hoặc tạm thời để trống nếu chỉ cần bật)
+                Byte orig[] = {0xF6, 0x03, 0x02, 0xAA};
+                WriteMem(unitySlide + 0x4A38100, orig, sizeof(orig));
             }
         }
     }
     
-    // 2. Cam xa (Có bật/tắt)
+    // 2. Cam Xa (Bật / Tắt)
     if (ImGui::Checkbox("Cam Xa (Zoom Camera)", &b_camxa)) {
-        if (unitySlide > 0 && b_camxa) {
-            Byte patchCam1[] = {0x20, 0x00, 0x80, 0x52, 0xC0, 0x03, 0x5F, 0xD6};
-            Byte patchCam2[] = {0x00, 0x00, 0xA8, 0x52, 0x00, 0x00, 0x27, 0x1E, 0xC0, 0x03, 0x5F, 0xD6};
-            WriteMem(unitySlide + 0x554B9EC, patchCam1, sizeof(patchCam1));
-            WriteMem(unitySlide + 0x541142C, patchCam2, sizeof(patchCam2));
-            WriteMem(unitySlide + 0x550E2BC, patchCam2, sizeof(patchCam2));
+        if (unitySlide > 0) {
+            if (b_camxa) {
+                Byte patchCam1[] = {0x20, 0x00, 0x80, 0x52, 0xC0, 0x03, 0x5F, 0xD6};
+                Byte patchCam2[] = {0x00, 0x00, 0xA8, 0x52, 0x00, 0x00, 0x27, 0x1E, 0xC0, 0x03, 0x5F, 0xD6};
+                WriteMem(unitySlide + 0x554B9EC, patchCam1, sizeof(patchCam1));
+                WriteMem(unitySlide + 0x541142C, patchCam2, sizeof(patchCam2));
+                WriteMem(unitySlide + 0x550E2BC, patchCam2, sizeof(patchCam2));
+            } else {
+                Byte origCam1[] = {0xFF, 0xC3, 0x00, 0xD1, 0xF4, 0x4F, 0x01, 0xA9};
+                Byte origCam2[] = {0xE9, 0x23, 0xBD, 0x6D, 0xF4, 0x4F, 0x01, 0xA9, 0xFD, 0x7B, 0x02, 0xA9};
+                Byte origCam3[] = {0xF4, 0x4F, 0xBE, 0xA9, 0xFD, 0x7B, 0x01, 0xA9, 0xFD, 0x43, 0x00, 0x91};
+                WriteMem(unitySlide + 0x554B9EC, origCam1, sizeof(origCam1));
+                WriteMem(unitySlide + 0x541142C, origCam2, sizeof(origCam2));
+                WriteMem(unitySlide + 0x550E2BC, origCam3, sizeof(origCam3));
+            }
         }
     }
     
-    // 3. Show Unti (Có bật/tắt)
+    // 3. Show Unti (Bật / Tắt)
     if (ImGui::Checkbox("Show Unti", &b_showunti)) {
-        if (unitySlide > 0 && b_showunti) {
-            Byte patchShowUnti[] = {0x20, 0x00, 0x80, 0x52, 0xC0, 0x03, 0x5F, 0xD6};
-            WriteMem(unitySlide + 0x5F1C394, patchShowUnti, sizeof(patchShowUnti));
-            WriteMem(unitySlide + 0x6A6B798, patchShowUnti, sizeof(patchShowUnti));
-            WriteMem(unitySlide + 0x6A6B8FC, patchShowUnti, sizeof(patchShowUnti));
+        if (unitySlide > 0) {
+            if (b_showunti) {
+                Byte patchShowUnti[] = {0x20, 0x00, 0x80, 0x52, 0xC0, 0x03, 0x5F, 0xD6};
+                WriteMem(unitySlide + 0x5F1C394, patchShowUnti, sizeof(patchShowUnti));
+                WriteMem(unitySlide + 0x6A6B798, patchShowUnti, sizeof(patchShowUnti));
+                WriteMem(unitySlide + 0x6A6B8FC, patchShowUnti, sizeof(patchShowUnti));
+            } else {
+                Byte orig1[] = {0xFF, 0x43, 0x01, 0xD1, 0xF8, 0x5F, 0x01, 0xA9};
+                Byte orig2[] = {0xF6, 0x57, 0xBD, 0xA9, 0xF4, 0x4F, 0x01, 0xA9};
+                WriteMem(unitySlide + 0x5F1C394, orig1, sizeof(orig1));
+                WriteMem(unitySlide + 0x6A6B798, orig2, sizeof(orig2));
+                WriteMem(unitySlide + 0x6A6B8FC, orig2, sizeof(orig2));
+            }
         }
     }
     
-    // 4. Show LSD (Có bật/tắt)
+    // 4. Show LSD (Bật / Tắt)
     if (ImGui::Checkbox("Show LSD", &b_showlsd)) {
-        if (unitySlide > 0 && b_showlsd) {
-            Byte patchLSD[] = {0x20, 0x00, 0x80, 0x52, 0xC0, 0x03, 0x5F, 0xD6};
-            WriteMem(unitySlide + 0x5ADF5A8, patchLSD, sizeof(patchLSD));
+        if (unitySlide > 0) {
+            if (b_showlsd) {
+                Byte patchLSD[] = {0x20, 0x00, 0x80, 0x52, 0xC0, 0x03, 0x5F, 0xD6};
+                WriteMem(unitySlide + 0x5ADF5A8, patchLSD, sizeof(patchLSD));
+            } else {
+                Byte origLSD[] = {0xF4, 0x4F, 0xBE, 0xA9, 0xFD, 0x7B, 0x01, 0xA9};
+                WriteMem(unitySlide + 0x5ADF5A8, origLSD, sizeof(origLSD));
+            }
         }
     }
     
-    // 5. Ẩn tia (Có bật/tắt)
+    // 5. Ẩn tia (Bật / Tắt)
     if (ImGui::Checkbox("An Tia", &b_antray)) {
-        if (unitySlide > 0 && b_antray) {
-            Byte patchAntray[] = {0x20, 0x00, 0x80, 0x52, 0xC0, 0x03, 0x5F, 0xD6};
-            WriteMem(unitySlide + 0x5FBEC8C, patchAntray, sizeof(patchAntray));
+        if (unitySlide > 0) {
+            if (b_antray) {
+                Byte patchAntray[] = {0x20, 0x00, 0x80, 0x52, 0xC0, 0x03, 0x5F, 0xD6};
+                WriteMem(unitySlide + 0x5FBEC8C, patchAntray, sizeof(patchAntray));
+            } else {
+                Byte origAntray[] = {0xF6, 0x57, 0xBD, 0xA9, 0xF4, 0x4F, 0x01, 0xA9};
+                WriteMem(unitySlide + 0x5FBEC8C, origAntray, sizeof(origAntray));
+            }
         }
     }
     
