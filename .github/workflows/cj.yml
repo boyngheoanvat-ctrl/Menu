@@ -15,7 +15,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Setup Theos
-      uses: unforgiven-dev/install-theos-action@v1
+      uses: Randomblock1/theos-action@v1
 
     - name: Build Tweak
       run: make package
