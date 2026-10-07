@@ -1,8 +1,8 @@
-name: PubgCheat
+name: PubgCheatMenu
 bundle_id: com.pubg.cheat.menu
 target:
   type: dynamic_library
-  name: PubgCheat
+  name: PubgCheatMenu
 sources:
   - PubgLoad.m
   - ImGuiDrawView.mm
