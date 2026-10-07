@@ -4,11 +4,11 @@ TARGET = iphone:clang:latest:12.0
 
 include $(THEOS)/makefiles/common.mk
 
-TWEAK_NAME = PubgCheat
+TWEAK_NAME = PubgCheatMenu
 
-PubgCheat_FILES = PubgLoad.m ImGuiDrawView.mm menu.mm JHDragView.m JHPP.m
-PubgCheat_CFLAGS = -fobjc-arc -Wno-unused-variable -Wno-unused-value
-PubgCheat_LIBRARIES = substrate
+PubgCheatMenu_FILES = PubgLoad.m ImGuiDrawView.mm menu.mm JHDragView.m JHPP.m
+PubgCheatMenu_CFLAGS = -fobjc-arc -Wno-unused-variable -Wno-unused-value
+PubgCheatMenu_LIBRARIES = substrate
 
 include $(THEOS_MAKE_PATH)/tweak.mk
 
