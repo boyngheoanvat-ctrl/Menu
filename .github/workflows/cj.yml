@@ -1,19 +1,32 @@
-name: PubgCheatMenu
-bundle_id: com.pubg.cheat.menu
-target:
-  type: dynamic_library
-  name: PubgCheatMenu
-sources:
-  - PubgLoad.m
-  - ImGuiDrawView.mm
-  - menu.mm
-  - JHDragView.m
-  - JHPP.m
-frameworks:
-  - UIKit
-  - Foundation
-  - CoreGraphics
-libraries:
-  - substrate
-architectures:
-  - arm64
+name: Build iOS Dylib
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Dependencies & Theos
+        run: |
+          brew install ldid
+          rm -rf ~/theos
+          git clone --recursive https://github.com/theos/theos.git ~/theos
+          rm -rf ~/theos/sdks
+          git clone --depth 1 https://github.com/theos/sdks.git ~/theos/sdks
+
+      - name: Build Dylib
+        env:
+          THEOS: /Users/runner/theos
+        run: |
+          make clean
+          make
+
+      # Bước mới: Đưa file dylib lên mục Artifacts để tải về
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: eri-dylib
+          path: .theos/obj/debug/eri.dylib # Hoặc kiểm tra đường dẫn file dylib nếu nó xuất ra ở thư mục gốc
