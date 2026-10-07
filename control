@@ -3,7 +3,7 @@ Name: Eri
 Depends: mobilesubstrate
 Version: 1.0.0
 Architecture: iphoneos-arm
-Description: A cheat menu tweak for iOS.
+Description: Eri iOS tweak
 Maintainer: eri
 Author: eri
 Section: Tweaks
