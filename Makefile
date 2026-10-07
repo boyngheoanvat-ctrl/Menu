@@ -6,7 +6,6 @@ include $(THEOS)/makefiles/common.mk
 TWEAK_NAME = Eri
 
 Eri_FILES = menu.mm
-Eri_PLIST = Eri.plist
 Eri_FRAMEWORKS = UIKit Foundation
 
 include $(THEOS_MAKE_PATH)/tweak.mk
