@@ -64,7 +64,7 @@ __attribute__((constructor)) void initPatches() {
     });
 }
 
-// Xử lý bật/tắt các chức năng khi gọi hàm từ bên ngoài hoặc qua nút bấm
+// Xử lý bật/tắt các chức năng
 void ToggleFeature(int featureID, BOOL enable) {
     if (unitySlide == 0) return;
     
