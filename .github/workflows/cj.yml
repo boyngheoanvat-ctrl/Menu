@@ -1,116 +1,88 @@
-name: Build Eri
+- name: Setup Theos
+  run: |
+    set -e
 
-on:
-  workflow_dispatch:
-  push:
+    if [ ! -d "$GITHUB_WORKSPACE/theos" ]; then
+      git clone --recursive \
+        https://github.com/theos/theos.git \
+        "$GITHUB_WORKSPACE/theos"
+    fi
 
-jobs:
-  build:
-    runs-on: macos-latest
+    echo "THEOS=$GITHUB_WORKSPACE/theos" >> "$GITHUB_ENV"
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+- name: Create missing project files
+  run: |
+    set -e
 
-      - name: Setup Theos
-        run: |
-          set -e
+    find . -maxdepth 1 -type f -name 'Eri.plist*' -delete
 
-          if [ ! -d "$GITHUB_WORKSPACE/theos" ]; then
-            git clone --recursive \
-              https://github.com/theos/theos.git \
-              "$GITHUB_WORKSPACE/theos"
-          fi
+    cat > Eri.plist <<'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+ "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Filter</key>
+    <dict>
+        <key>Bundles</key>
+        <array>
+            <string>com.garena.game.menu</string>
+        </array>
+    </dict>
+</dict>
+</plist>
+EOF
 
-          echo "THEOS=$GITHUB_WORKSPACE/theos" >> "$GITHUB_ENV"
+    if [ ! -f control ]; then
+      cat > control <<'EOF'
+Package: com.eri.eri
+Name: Eri
+Depends: mobilesubstrate
+Version: 1.0.0
+Architecture: iphoneos-arm
+Description: Eri iOS tweak
+Maintainer: eri
+Author: eri
+Section: Tweaks
+EOF
+    fi
 
-      - name: Create missing project files
-        run: |
-          set -e
+    test -f Makefile
+    test -f menu.mm
+    test -f Eri.plist
 
-          echo "Working directory:"
-          pwd
+    plutil -lint Eri.plist
 
-          echo "Existing files:"
-          find . -maxdepth 1 -type f -print
+- name: Install ldid
+  run: |
+    set -e
 
-          # Xóa mọi tên Eri.plist có ký tự thừa ở cuối
-          find . -maxdepth 1 -type f -name 'Eri.plist*' -delete
+    brew install ldid || true
+    echo "$(brew --prefix)/bin" >> "$GITHUB_PATH"
 
-          # Tạo Eri.plist chính xác
-          cat > ./Eri.plist <<'EOF'
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
-           "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-              <key>Filter</key>
-              <dict>
-                  <key>Bundles</key>
-                  <array>
-                      <string>com.garena.game.menu</string>
-                  </array>
-              </dict>
-          </dict>
-          </plist>
-          EOF
+    echo "ldid:"
+    which ldid
+    ldid -h 2>&1 | head -20
 
-          # Tạo control nếu thiếu
-          if [ ! -f "./control" ]; then
-            cat > ./control <<'EOF'
-          Package: com.eri.eri
-          Name: Eri
-          Depends: mobilesubstrate
-          Version: 1.0.0
-          Architecture: iphoneos-arm
-          Description: Eri iOS tweak
-          Maintainer: eri
-          Author: eri
-          Section: Tweaks
-          EOF
-          fi
+- name: Build package
+  run: |
+    set -e
 
-          # Makefile phải tồn tại
-          if [ ! -f "./Makefile" ]; then
-            echo "ERROR: Makefile is missing"
-            exit 1
-          fi
+    export THEOS="$GITHUB_WORKSPACE/theos"
 
-          # menu.mm phải tồn tại
-          if [ ! -f "./menu.mm" ]; then
-            echo "ERROR: menu.mm is missing"
-            exit 1
-          fi
+    echo "THEOS=$THEOS"
+    echo "ldid=$(which ldid)"
 
-          echo "===== CREATED FILES ====="
-          ls -lab ./Eri.plist ./control ./Makefile ./menu.mm
+    make clean
+    make package FINALPACKAGE=1
 
-          echo "===== PLIST CHECK ====="
-          plutil -lint ./Eri.plist
+- name: Find package
+  run: |
+    find . -type f -name "*.deb" -print
 
-          echo "===== PLIST CONTENT ====="
-          cat ./Eri.plist
-
-      - name: Build package
-        run: |
-          set -e
-
-          export THEOS="$GITHUB_WORKSPACE/theos"
-
-          echo "THEOS=$THEOS"
-          echo "PWD=$(pwd)"
-
-          make clean
-          make package FINALPACKAGE=1
-
-      - name: Find package
-        run: |
-          echo "===== PACKAGES ====="
-          find . -type f -name "*.deb" -print
-
-      - name: Upload package
-        uses: actions/upload-artifact@v4
-        with:
-          name: Eri-package
-          path: packages/*.deb
-          if-no-files-found: error
+- name: Upload package
+  uses: actions/upload-artifact@v4
+  with:
+    name: Eri-package
+    path: packages/*.deb
+    if-no-files-found: error
