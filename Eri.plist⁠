@@ -7,7 +7,7 @@
         <key>Bundles</key>
         <array>
             <!-- Thay com.apple.springboard bằng Bundle ID của ứng dụng bạn muốn nhúng tweak vào -->
-            <string>com.apple.springboard</string>
+            <string>com.garena.game.menu</string>
         </array>
     </dict>
 </dict>
