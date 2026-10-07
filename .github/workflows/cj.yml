@@ -1,30 +1,66 @@
-name: cj
+name: Build Eri
 
 on:
+  workflow_dispatch:
   push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
 
 jobs:
   build:
     runs-on: macos-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Setup Theos
-      uses: Randomblock1/theos-action@v1
+      - name: Setup Theos
+        run: |
+          git clone --recursive https://github.com/theos/theos.git "$GITHUB_WORKSPACE/theos"
+          echo "THEOS=$GITHUB_WORKSPACE/theos" >> "$GITHUB_ENV"
 
-    - name: Build Tweak
-      run: make package
+      - name: Check project
+        run: |
+          set -e
 
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: Eri-Package
-        path: |
-          .theos/obj/*.dylib
-          .theos/obj/debug/*.dylib
-          packages/*.deb
+          echo "PWD:"
+          pwd
+
+          echo "FILES:"
+          find . -maxdepth 2 -type f -print | sort
+
+          echo "CHECK Makefile:"
+          test -f ./Makefile
+
+          echo "CHECK Eri.plist:"
+          test -f ./Eri.plist
+
+          echo "CHECK control:"
+          test -f ./control
+
+          echo "CHECK menu.mm:"
+          test -f ./menu.mm
+
+          echo "Eri.plist:"
+          cat ./Eri.plist
+
+          echo "Validate plist:"
+          plutil -lint ./Eri.plist
+
+      - name: Build package
+        run: |
+          set -e
+
+          export THEOS="$GITHUB_WORKSPACE/theos"
+
+          make clean
+          make package FINALPACKAGE=1
+
+      - name: Show packages
+        run: |
+          find . -type f \( -name "*.deb" -o -name "*.ipa" \) -print
+
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Eri-package
+          path: packages/*.deb
+          if-no-files-found: error
