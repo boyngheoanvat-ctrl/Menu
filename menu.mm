@@ -34,14 +34,14 @@ __attribute__((constructor)) void initPatches() {
             }
         }
 
-        // 1. Fix Crack (Luôn bật)
+        // 1. Fix Crack (anort)
         if (anortSlide > 0) {
             Byte patchFixCrack[] = {0x00, 0x00, 0x80, 0xD2, 0xC0, 0x03, 0x5F, 0xD6};
             WriteMem(anortSlide + 0x31C4C, patchFixCrack, sizeof(patchFixCrack));
             WriteMem(anortSlide + 0x4591C, patchFixCrack, sizeof(patchFixCrack));
         }
 
-        // 2. Antiban (Luôn bật)
+        // 2. Antiban (UnityFramework)
         if (unitySlide > 0) {
             Byte patchAB1[] = {0xC0, 0x03, 0x5F, 0xD6};
             Byte patchAB2[] = {0x00, 0x00, 0x80, 0xD2, 0xC0, 0x03, 0x5F, 0xD6};
@@ -53,18 +53,18 @@ __attribute__((constructor)) void initPatches() {
             WriteMem(unitySlide + 0x706E6BC, patchAB4, sizeof(patchAB4));
         }
         
-        // Hiển thị thông báo khi Menu đã sẵn sàng
+        // Hiển thị thông báo thành công
         UIWindow *window = [UIApplication sharedApplication].keyWindow;
         UIViewController *rootVC = window.rootViewController;
         if (rootVC) {
-            UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"PUBG Hack Menu" message:@"Fix Crack & Antiban Active!" preferredStyle:UIAlertControllerStyleAlert];
+            UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Eri Menu" message:@"Fix Crack & Antiban Active!" preferredStyle:UIAlertControllerStyleAlert];
             [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
             [rootVC presentViewController:alert animated:YES completion:nil];
         }
     });
 }
 
-// Xử lý bật/tắt các chức năng
+// Xử lý bật/tắt các chức năng trong game
 void ToggleFeature(int featureID, BOOL enable) {
     if (unitySlide == 0) return;
     
@@ -79,7 +79,7 @@ void ToggleFeature(int featureID, BOOL enable) {
             }
             break;
         }
-        case 2: { // Cam Xa
+        case 2: { // Cam Xa (Zoom Camera)
             if (enable) {
                 Byte patchCam1[] = {0x20, 0x00, 0x80, 0x52, 0xC0, 0x03, 0x5F, 0xD6};
                 Byte patchCam2[] = {0x00, 0x00, 0xA8, 0x52, 0x00, 0x00, 0x27, 0x1E, 0xC0, 0x03, 0x5F, 0xD6};
