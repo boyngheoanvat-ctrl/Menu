@@ -10,10 +10,10 @@ Eri_FRAMEWORKS = UIKit Foundation
 
 include $(THEOS_MAKE_PATH)/tweak.mk
 
-# Tự động tạo file plist phòng hờ trường hợp Theos không quét thấy file gốc trên git
-before-package::
-	@echo "Creating filter plist on the fly..."
-	@echo "{\n    Filter = {\n        Bundles = (\n            \"com.garena.game.kgvn\"\n        );\n    };\n}" > $(THEOS_STAGING_DIR)/Library/MobileSubstrate/DynamicLibraries/Eri.plist
+# Tự sinh ra file Eri.plist ngay từ bước đầu tiên trước khi stage check
+internal-tweak-stage::
+	@echo "Generating Eri.plist programmatically..."
+	@echo '{\n    Filter = {\n        Bundles = (\n            "com.garena.game.kgvn"\n        );\n    };\n}' > $(_THEOS_CURRENT_PROJECT_DIR)/Eri.plist
 
 after-package::
 	@echo "Fixing Substrate dependency path..."
