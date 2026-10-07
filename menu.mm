@@ -1,6 +1,7 @@
 #import <UIKit/UIKit.h>
 #import <mach-o/dyld.h>
 #import <sys/mman.h>
+#import "ImGuiDrawView.h"
 
 // Hàm ghi bộ nhớ cho ARM64
 void WriteMem(uint64_t address, const void *bytes, size_t size) {
