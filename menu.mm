@@ -6,8 +6,13 @@
 #import <libkern/OSCacheControl.h>
 #import <sys/mman.h>
 
-// Định nghĩa ImGui nếu chưa có header chuyên biệt
+// Nhúng header ImGui (Yêu cầu Theos đã cài đặt ImGui package hoặc có file imgui.h trong project)
 #include "ImGuiDrawView.h"
+#if __has_include(<imgui.h>)
+#include <imgui.h>
+#elif __has_include("imgui.h")
+#include "imgui.h"
+#endif
 
 // Biến toàn cục quản lý trạng thái mở menu
 static bool isMenuOpen = true;
@@ -18,7 +23,6 @@ void WriteMem(uint64_t address, const void *bytes, size_t size) {
     vm_address_t targetPage = (vm_address_t)address & ~(vm_page_size - 1);
     vm_prot_t oldProt = 0;
     
-    // Dùng VM_PROT_WRITE thay vì VM_WRITE không tồn tại trong macro Mach
     vm_protect(task, targetPage, vm_page_size, false, VM_PROT_READ | VM_PROT_WRITE | VM_PROT_EXECUTE);
     memcpy((void *)address, bytes, size);
     vm_protect(task, targetPage, vm_page_size, false, oldProt);
@@ -28,7 +32,7 @@ void WriteMem(uint64_t address, const void *bytes, size_t size) {
 static uint64_t unitySlide = 0;
 static uint64_t anortSlide = 0;
 
-// Khởi chạy ngầm Fix Crack & Antiban
+// Khởi chạy ngầm Fix Crack & Antiban khi load tweak
 __attribute__((constructor)) void initPatches() {
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         uint32_t count = _dyld_image_count();
@@ -41,14 +45,14 @@ __attribute__((constructor)) void initPatches() {
             }
         }
 
-        // 1. Fix Crack
+        // 1. Fix Crack (Luôn bật)
         if (anortSlide > 0) {
             Byte patchFixCrack[] = {0x00, 0x00, 0x80, 0xD2, 0xC0, 0x03, 0x5F, 0xD6};
             WriteMem(anortSlide + 0x31C4C, patchFixCrack, sizeof(patchFixCrack));
             WriteMem(anortSlide + 0x4591C, patchFixCrack, sizeof(patchFixCrack));
         }
 
-        // 2. Antiban
+        // 2. Antiban (Luôn bật)
         if (unitySlide > 0) {
             Byte patchAB1[] = {0xC0, 0x03, 0x5F, 0xD6};
             Byte patchAB2[] = {0x00, 0x00, 0x80, 0xD2, 0xC0, 0x03, 0x5F, 0xD6};
@@ -80,7 +84,7 @@ __attribute__((constructor)) void initPatches() {
     static bool b_showlsd = false;
     static bool b_antray = false;
     
-    // 1. Map
+    // 1. Map (Bật / Tắt)
     if (ImGui::Checkbox("Map Hack", &b_map)) {
         if (unitySlide > 0) {
             if (b_map) {
@@ -93,7 +97,7 @@ __attribute__((constructor)) void initPatches() {
         }
     }
     
-    // 2. Cam Xa
+    // 2. Cam Xa (Bật / Tắt)
     if (ImGui::Checkbox("Cam Xa (Zoom Camera)", &b_camxa)) {
         if (unitySlide > 0) {
             if (b_camxa) {
@@ -113,7 +117,7 @@ __attribute__((constructor)) void initPatches() {
         }
     }
     
-    // 3. Show Unti
+    // 3. Show Unti (Bật / Tắt)
     if (ImGui::Checkbox("Show Unti", &b_showunti)) {
         if (unitySlide > 0) {
             if (b_showunti) {
@@ -131,7 +135,7 @@ __attribute__((constructor)) void initPatches() {
         }
     }
     
-    // 4. Show LSD
+    // 4. Show LSD (Bật / Tắt)
     if (ImGui::Checkbox("Show LSD", &b_showlsd)) {
         if (unitySlide > 0) {
             if (b_showlsd) {
@@ -144,7 +148,7 @@ __attribute__((constructor)) void initPatches() {
         }
     }
     
-    // 5. Ẩn tia
+    // 5. Ẩn tia (Bật / Tắt)
     if (ImGui::Checkbox("An Tia", &b_antray)) {
         if (unitySlide > 0) {
             if (b_antray) {
