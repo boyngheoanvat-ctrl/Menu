@@ -1,0 +1,8 @@
+{
+    Filter = {
+        Bundles = {
+            "com.tencent.ig",
+            "com.garena.game.menu"
+        };
+    };
+}
