@@ -5,18 +5,21 @@
 #import <mach/vm_map.h>
 #import <libkern/OSCacheControl.h>
 #import <sys/mman.h>
-#import "ImGuiDrawView.h"
 
-// Biến toàn cục quản lý trạng thái mở menu của ImGui
+// Định nghĩa ImGui nếu chưa có header chuyên biệt
+#include "ImGuiDrawView.h"
+
+// Biến toàn cục quản lý trạng thái mở menu
 static bool isMenuOpen = true;
 
-// Hàm ghi bộ nhớ cho ARM64 chuẩn xác
+// Hàm ghi bộ nhớ ARM64 an toàn
 void WriteMem(uint64_t address, const void *bytes, size_t size) {
     mach_port_t task = mach_task_self();
     vm_address_t targetPage = (vm_address_t)address & ~(vm_page_size - 1);
     vm_prot_t oldProt = 0;
     
-    vm_protect(task, targetPage, vm_page_size, false, VM_PROT_READ | VM_WRITE | VM_COPY);
+    // Dùng VM_PROT_WRITE thay vì VM_WRITE không tồn tại trong macro Mach
+    vm_protect(task, targetPage, vm_page_size, false, VM_PROT_READ | VM_PROT_WRITE | VM_PROT_EXECUTE);
     memcpy((void *)address, bytes, size);
     vm_protect(task, targetPage, vm_page_size, false, oldProt);
     sys_icache_invalidate((void *)address, size);
@@ -25,7 +28,7 @@ void WriteMem(uint64_t address, const void *bytes, size_t size) {
 static uint64_t unitySlide = 0;
 static uint64_t anortSlide = 0;
 
-// Tính năng Luôn bật (Fix crack & Antiban) chạy ngầm khi khởi động
+// Khởi chạy ngầm Fix Crack & Antiban
 __attribute__((constructor)) void initPatches() {
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         uint32_t count = _dyld_image_count();
@@ -38,14 +41,14 @@ __attribute__((constructor)) void initPatches() {
             }
         }
 
-        // 1. Fix Crack (Luôn bật)
+        // 1. Fix Crack
         if (anortSlide > 0) {
             Byte patchFixCrack[] = {0x00, 0x00, 0x80, 0xD2, 0xC0, 0x03, 0x5F, 0xD6};
             WriteMem(anortSlide + 0x31C4C, patchFixCrack, sizeof(patchFixCrack));
             WriteMem(anortSlide + 0x4591C, patchFixCrack, sizeof(patchFixCrack));
         }
 
-        // 2. Antiban (Luôn bật)
+        // 2. Antiban
         if (unitySlide > 0) {
             Byte patchAB1[] = {0xC0, 0x03, 0x5F, 0xD6};
             Byte patchAB2[] = {0x00, 0x00, 0x80, 0xD2, 0xC0, 0x03, 0x5F, 0xD6};
@@ -61,7 +64,6 @@ __attribute__((constructor)) void initPatches() {
 
 @implementation ImGuiDrawView
 
-// Thêm phương thức showChange: để khắc phục lỗi thiếu method implementation
 + (void)showChange:(BOOL)open {
     isMenuOpen = open;
 }
@@ -78,7 +80,7 @@ __attribute__((constructor)) void initPatches() {
     static bool b_showlsd = false;
     static bool b_antray = false;
     
-    // 1. Map (Bật / Tắt)
+    // 1. Map
     if (ImGui::Checkbox("Map Hack", &b_map)) {
         if (unitySlide > 0) {
             if (b_map) {
@@ -91,7 +93,7 @@ __attribute__((constructor)) void initPatches() {
         }
     }
     
-    // 2. Cam Xa (Bật / Tắt)
+    // 2. Cam Xa
     if (ImGui::Checkbox("Cam Xa (Zoom Camera)", &b_camxa)) {
         if (unitySlide > 0) {
             if (b_camxa) {
@@ -111,7 +113,7 @@ __attribute__((constructor)) void initPatches() {
         }
     }
     
-    // 3. Show Unti (Bật / Tắt)
+    // 3. Show Unti
     if (ImGui::Checkbox("Show Unti", &b_showunti)) {
         if (unitySlide > 0) {
             if (b_showunti) {
@@ -129,7 +131,7 @@ __attribute__((constructor)) void initPatches() {
         }
     }
     
-    // 4. Show LSD (Bật / Tắt)
+    // 4. Show LSD
     if (ImGui::Checkbox("Show LSD", &b_showlsd)) {
         if (unitySlide > 0) {
             if (b_showlsd) {
@@ -142,7 +144,7 @@ __attribute__((constructor)) void initPatches() {
         }
     }
     
-    // 5. Ẩn tia (Bật / Tắt)
+    // 5. Ẩn tia
     if (ImGui::Checkbox("An Tia", &b_antray)) {
         if (unitySlide > 0) {
             if (b_antray) {
