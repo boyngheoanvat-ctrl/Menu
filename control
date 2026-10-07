@@ -1,0 +1,9 @@
+Package: com.yourname.pubgcheatmenu
+Name: PubgCheatMenu
+Depends: mobilesubstrate
+Version: 1.0.0
+Architecture: iphoneos-arm
+Description: A cheat menu tweak for iOS games.
+Maintainer: YourName
+Author: YourName
+Section: Tweaks
