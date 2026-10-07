@@ -1,9 +1,16 @@
 #import <UIKit/UIKit.h>
 #import <mach-o/dyld.h>
+#import <mach/mach.h>
+#import <mach/vm_prot.h>
+#import <mach/vm_map.h>
+#import <libkern/OSCacheControl.h>
 #import <sys/mman.h>
 #import "ImGuiDrawView.h"
 
-// Hàm ghi bộ nhớ cho ARM64
+// Biến toàn cục quản lý trạng thái mở menu của ImGui
+static bool isMenuOpen = true;
+
+// Hàm ghi bộ nhớ cho ARM64 chuẩn xác
 void WriteMem(uint64_t address, const void *bytes, size_t size) {
     mach_port_t task = mach_task_self();
     vm_address_t targetPage = (vm_address_t)address & ~(vm_page_size - 1);
@@ -53,6 +60,11 @@ __attribute__((constructor)) void initPatches() {
 }
 
 @implementation ImGuiDrawView
+
+// Thêm phương thức showChange: để khắc phục lỗi thiếu method implementation
++ (void)showChange:(BOOL)open {
+    isMenuOpen = open;
+}
 
 - (void)drawView {
     ImGui::Begin("PUBG Mobile Hack Menu", &isMenuOpen, ImGuiWindowFlags_AlwaysAutoResize);
