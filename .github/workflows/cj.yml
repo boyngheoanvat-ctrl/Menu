@@ -14,36 +14,82 @@ jobs:
 
       - name: Setup Theos
         run: |
-          git clone --recursive https://github.com/theos/theos.git "$GITHUB_WORKSPACE/theos"
+          set -e
+
+          if [ ! -d "$GITHUB_WORKSPACE/theos" ]; then
+            git clone --recursive \
+              https://github.com/theos/theos.git \
+              "$GITHUB_WORKSPACE/theos"
+          fi
+
           echo "THEOS=$GITHUB_WORKSPACE/theos" >> "$GITHUB_ENV"
 
-      - name: Check project
+      - name: Create missing project files
         run: |
           set -e
 
-          echo "PWD:"
+          echo "Working directory:"
           pwd
 
-          echo "FILES:"
-          find . -maxdepth 2 -type f -print | sort
+          echo "Existing files:"
+          find . -maxdepth 1 -type f -print
 
-          echo "CHECK Makefile:"
-          test -f ./Makefile
+          # Xóa mọi tên Eri.plist có ký tự thừa ở cuối
+          find . -maxdepth 1 -type f -name 'Eri.plist*' -delete
 
-          echo "CHECK Eri.plist:"
-          test -f ./Eri.plist
+          # Tạo Eri.plist chính xác
+          cat > ./Eri.plist <<'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+           "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>Filter</key>
+              <dict>
+                  <key>Bundles</key>
+                  <array>
+                      <string>com.garena.game.menu</string>
+                  </array>
+              </dict>
+          </dict>
+          </plist>
+          EOF
 
-          echo "CHECK control:"
-          test -f ./control
+          # Tạo control nếu thiếu
+          if [ ! -f "./control" ]; then
+            cat > ./control <<'EOF'
+          Package: com.eri.eri
+          Name: Eri
+          Depends: mobilesubstrate
+          Version: 1.0.0
+          Architecture: iphoneos-arm
+          Description: Eri iOS tweak
+          Maintainer: eri
+          Author: eri
+          Section: Tweaks
+          EOF
+          fi
 
-          echo "CHECK menu.mm:"
-          test -f ./menu.mm
+          # Makefile phải tồn tại
+          if [ ! -f "./Makefile" ]; then
+            echo "ERROR: Makefile is missing"
+            exit 1
+          fi
 
-          echo "Eri.plist:"
-          cat ./Eri.plist
+          # menu.mm phải tồn tại
+          if [ ! -f "./menu.mm" ]; then
+            echo "ERROR: menu.mm is missing"
+            exit 1
+          fi
 
-          echo "Validate plist:"
+          echo "===== CREATED FILES ====="
+          ls -lab ./Eri.plist ./control ./Makefile ./menu.mm
+
+          echo "===== PLIST CHECK ====="
           plutil -lint ./Eri.plist
+
+          echo "===== PLIST CONTENT ====="
+          cat ./Eri.plist
 
       - name: Build package
         run: |
@@ -51,12 +97,16 @@ jobs:
 
           export THEOS="$GITHUB_WORKSPACE/theos"
 
+          echo "THEOS=$THEOS"
+          echo "PWD=$(pwd)"
+
           make clean
           make package FINALPACKAGE=1
 
-      - name: Show packages
+      - name: Find package
         run: |
-          find . -type f \( -name "*.deb" -o -name "*.ipa" \) -print
+          echo "===== PACKAGES ====="
+          find . -type f -name "*.deb" -print
 
       - name: Upload package
         uses: actions/upload-artifact@v4
